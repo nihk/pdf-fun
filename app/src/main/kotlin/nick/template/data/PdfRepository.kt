@@ -3,10 +3,10 @@ package nick.template.data
 import android.content.res.AssetManager
 import android.content.res.Resources
 import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
+import androidx.core.graphics.applyCanvas
 import androidx.core.graphics.createBitmap
 import java.io.File
 import javax.inject.Inject
@@ -73,12 +73,9 @@ class AssetPdfRepository @Inject constructor(
             width = bitmapWidth,
             // Scale the height based on the max width
             height = (bitmapWidth.toFloat() / width * height).toInt()
-        ).also { bitmap ->
-            Canvas(bitmap).apply {
-                // White background to support transparent PDF pages
-                drawColor(Color.WHITE)
-                drawBitmap(bitmap, 0f, 0f, null)
-            }
+        ).applyCanvas {
+            // White background to support transparent PDF pages
+            drawColor(Color.WHITE)
         }
     }
 }
