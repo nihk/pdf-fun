@@ -10,27 +10,29 @@ import androidx.core.graphics.applyCanvas
 import androidx.core.graphics.createBitmap
 import java.io.File
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import nick.template.di.CacheDir
+import nick.template.di.IoContext
 
 interface PdfRepository {
     // Returns the page count of the file
     suspend fun initialize(filename: String): Int
     suspend fun page(page: Int): Bitmap
-    fun close()
+    suspend fun close()
 }
 
 class AssetPdfRepository @Inject constructor(
     private val assetManager: AssetManager,
-    @CacheDir private val cacheDir: File
+    @CacheDir private val cacheDir: File,
+    @IoContext private val ioContext: CoroutineContext
 ) : PdfRepository {
     private var pdfRenderer: PdfRenderer? = null
     private val mutex = Mutex()
 
-    override suspend fun initialize(filename: String): Int = withContext(Dispatchers.IO) {
+    override suspend fun initialize(filename: String): Int = withContext(ioContext) {
         // Contents of assets are compressed by default, and the PdfRenderer class cannot open it.
         // Work around this by copying the file into the cache directory.
         val file = File(cacheDir, filename)
@@ -45,7 +47,7 @@ class AssetPdfRepository @Inject constructor(
             .pageCount
     }
 
-    override fun close() {
+    override suspend fun close() = withContext(ioContext) {
         pdfRenderer?.close()
         pdfRenderer = null
     }
@@ -54,7 +56,7 @@ class AssetPdfRepository @Inject constructor(
         // PdfRenderer restricts only 1 page opened at a time, multiple page requests have to
         // be done serially.
         mutex.withLock {
-            return withContext(Dispatchers.IO) {
+            return withContext(ioContext) {
                 requireNotNull(pdfRenderer) { "Didn't initialize this repository" }
                     .openPage(page)
                     .render(Resources.getSystem().displayMetrics.widthPixels)

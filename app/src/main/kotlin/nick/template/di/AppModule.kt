@@ -8,6 +8,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import java.io.File
+import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.Dispatchers
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -24,5 +26,9 @@ abstract class AppModule {
         fun cacheDir(@ApplicationContext context: Context): File {
             return context.cacheDir
         }
+
+        @Provides
+        @IoContext
+        fun ioContext(): CoroutineContext = Dispatchers.IO
     }
 }
