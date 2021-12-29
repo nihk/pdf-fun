@@ -68,9 +68,14 @@ class MainViewModel(
                     Result.NoOpResult.let(::flowOf)
                 } else {
                     flow {
+                        val loading = Result.PageResult(
+                            page = currentPage.copy(isLoading = true)
+                        )
+                        emit(loading)
+
                         val bitmap = pdfRepository.page(event.page)
                         val result = Result.PageResult(
-                            page = currentPage.copy(bitmap = bitmap)
+                            page = currentPage.copy(bitmap = bitmap, isLoading = false)
                         )
                         emit(result)
                     }
