@@ -32,7 +32,10 @@ class MainViewModel(
             .toResults()
             .scan(emptyList<Page>()) { state, result ->
                 when (result) {
-                    is Result.UpdatedPagesResult -> result.pages
+                    is Result.PagesResult -> result.pages
+                    is Result.PageResult -> state.toMutableList().apply {
+                        set(result.page.number, result.page)
+                    }
                     Result.NoOpResult -> state
                 }
             }
@@ -52,26 +55,23 @@ class MainViewModel(
             filterIsInstance<Event.Initialize>().map {
                 val pageCount = pdfRepository.initialize("wtc.pdf")
                 val pages = List(pageCount, ::Page)
-                Result.UpdatedPagesResult(pages)
+                Result.PagesResult(pages)
             },
-            // Use map instead of mapLatest to avoid clobbering requests during fast page swiping.
-            // PdfRenderer restricts only 1 page opened at a time, multiple page requests have to
-            // be done serially.
-            filterIsInstance<Event.GetPage>().map { event ->
+            // flatMapMerge to allow concurrent page requests
+            filterIsInstance<Event.GetPage>().flatMapMerge { event ->
                 val currentPage = pages.value[event.page]
 
                 if (currentPage.bitmap != null) {
                     // Already loaded the bitmap
-                    Result.NoOpResult
+                    Result.NoOpResult.let(::flowOf)
                 } else {
-                    Result.UpdatedPagesResult(
-                        pages = pages.value.toMutableList().apply {
-                            val page = currentPage.copy(
-                                bitmap = pdfRepository.page(event.page)
-                            )
-                            set(event.page, page)
-                        }
-                    )
+                    flow {
+                        val bitmap = pdfRepository.page(event.page)
+                        val result = Result.PageResult(
+                            page = currentPage.copy(bitmap = bitmap)
+                        )
+                        emit(result)
+                    }
                 }
             }
         )

@@ -9,6 +9,8 @@ import android.graphics.pdf.PdfRenderer
 import androidx.core.graphics.createBitmap
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 interface PdfRepository {
@@ -22,6 +24,7 @@ class AssetPdfRepository @Inject constructor(
     private val assetManager: AssetManager
 ) : PdfRepository {
     private var pdfRenderer: PdfRenderer? = null
+    private val mutex = Mutex()
 
     override suspend fun initialize(filename: String): Int = withContext(Dispatchers.IO) {
         val fileDescriptor = assetManager
@@ -37,11 +40,16 @@ class AssetPdfRepository @Inject constructor(
         pdfRenderer = null
     }
 
-    override suspend fun page(page: Int): Bitmap = withContext(Dispatchers.IO) {
-        val pdfRenderer = requireNotNull(pdfRenderer) { "Didn't initialize this repository" }
-        pdfRenderer
-            .openPage(page)
-            .render(Resources.getSystem().displayMetrics.widthPixels)
+    override suspend fun page(page: Int): Bitmap {
+        // PdfRenderer restricts only 1 page opened at a time, multiple page requests have to
+        // be done serially.
+        mutex.withLock {
+            return withContext(Dispatchers.IO) {
+                requireNotNull(pdfRenderer) { "Didn't initialize this repository" }
+                    .openPage(page)
+                    .render(Resources.getSystem().displayMetrics.widthPixels)
+            }
+        }
     }
 
     private fun PdfRenderer.Page.render(width: Int) = use {
