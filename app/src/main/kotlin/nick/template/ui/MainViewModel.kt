@@ -57,7 +57,9 @@ class MainViewModel(
                 val pages = List(pageCount, ::Page)
                 Result.PagesResult(pages)
             },
-            // flatMapMerge to allow concurrent page requests
+            // flatMapMerge to allow concurrent page requests. Ultimately PdfRenderer will render
+            // pages serially, but this ViewModel doesn't know that, so it tries to do concurrently
+            // loaded pages as best as it can.
             filterIsInstance<Event.GetPage>().flatMapMerge { event ->
                 val currentPage = pages.value[event.page]
 
