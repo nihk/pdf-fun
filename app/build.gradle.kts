@@ -17,10 +17,6 @@ androidAppConfig {
             }
         }
     }
-
-    androidResources {
-        noCompress("pdf")
-    }
 }
 
 dependencies {

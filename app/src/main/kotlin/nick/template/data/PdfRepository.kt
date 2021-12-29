@@ -6,12 +6,15 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
+import android.os.ParcelFileDescriptor
 import androidx.core.graphics.createBitmap
+import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import nick.template.di.CacheDir
 
 interface PdfRepository {
     // Returns the page count of the file
@@ -21,16 +24,23 @@ interface PdfRepository {
 }
 
 class AssetPdfRepository @Inject constructor(
-    private val assetManager: AssetManager
+    private val assetManager: AssetManager,
+    @CacheDir private val cacheDir: File
 ) : PdfRepository {
     private var pdfRenderer: PdfRenderer? = null
     private val mutex = Mutex()
 
     override suspend fun initialize(filename: String): Int = withContext(Dispatchers.IO) {
-        val fileDescriptor = assetManager
-            .openFd(filename)
-            .parcelFileDescriptor
-        PdfRenderer(fileDescriptor)
+        // Contents of assets are compressed by default, and the PdfRenderer class cannot open it.
+        // Work around this by copying the file into the cache directory.
+        val file = File(cacheDir, filename)
+        assetManager.open(filename).use { input ->
+            file.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+
+        PdfRenderer(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY))
             .also { pdfRenderer = it }
             .pageCount
     }
