@@ -24,7 +24,7 @@ class MainFragment @Inject constructor(
 
         val adapter = PageAdapter()
         binding.pager.adapter = adapter
-        binding.pager.offscreenPageLimit = 1 // Pre-load adjacent page
+        binding.pager.offscreenPageLimit = 1 // Pre-load adjacent pages
 
         adapter.renderRequests()
             .map(Event::GetPage)
