@@ -36,9 +36,11 @@ class AssetPdfRepository @Inject constructor(
         // Contents of assets are compressed by default, and the PdfRenderer class cannot open it.
         // Work around this by copying the file into the cache directory.
         val file = File(cacheDir, filename)
-        assetManager.open(filename).use { input ->
-            file.outputStream().use { output ->
-                input.copyTo(output)
+        if (!file.exists()) {
+            assetManager.open(filename).use { input ->
+                file.outputStream().use { output ->
+                    input.copyTo(output)
+                }
             }
         }
 
