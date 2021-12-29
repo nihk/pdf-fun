@@ -5,11 +5,7 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.viewpager2.widget.ViewPager2
 import javax.inject.Inject
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import nick.template.R
@@ -27,25 +23,14 @@ class MainFragment @Inject constructor(
 
         val adapter = PageAdapter()
         binding.pager.adapter = adapter
+        binding.pager.offscreenPageLimit = 1 // Pre-load adjacent page
 
-        binding.pager.pageSelections()
+        adapter.renderRequests()
             .onEach { page -> viewModel.processEvent(Event.GetPage(page)) }
             .launchIn(viewLifecycleOwner.lifecycleScope)
 
         viewModel.pages
             .onEach { pages -> adapter.submitList(pages) }
             .launchIn(viewLifecycleOwner.lifecycleScope)
-    }
-
-    private fun ViewPager2.pageSelections(): Flow<Int> = callbackFlow {
-        val callback = object : ViewPager2.OnPageChangeCallback() {
-            override fun onPageSelected(position: Int) {
-                trySend(position)
-            }
-        }
-
-        registerOnPageChangeCallback(callback)
-
-        awaitClose { unregisterOnPageChangeCallback(callback) }
     }
 }

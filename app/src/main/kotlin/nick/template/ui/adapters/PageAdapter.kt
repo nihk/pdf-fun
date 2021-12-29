@@ -6,14 +6,21 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import nick.template.data.Page
 import nick.template.databinding.PageBinding
 
 class PageAdapter : ListAdapter<Page, PageViewHolder>(PageDiffCallback) {
+    private val renderRequests = MutableSharedFlow<Int>(extraBufferCapacity = 1)
+    fun renderRequests() = renderRequests.asSharedFlow()
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PageViewHolder {
         return LayoutInflater.from(parent.context)
             .let { inflater -> PageBinding.inflate(inflater, parent, false) }
-            .let { binding -> PageViewHolder(binding) }
+            .let { binding ->
+                PageViewHolder(binding) { number -> renderRequests.tryEmit(number) }
+            }
     }
 
     override fun onBindViewHolder(holder: PageViewHolder, position: Int) {
@@ -31,9 +38,15 @@ object PageDiffCallback : DiffUtil.ItemCallback<Page>() {
     }
 }
 
-class PageViewHolder(private val binding: PageBinding) : RecyclerView.ViewHolder(binding.root) {
+class PageViewHolder(
+    private val binding: PageBinding,
+    private val onRenderRequested: (Int) -> Unit
+) : RecyclerView.ViewHolder(binding.root) {
     fun bind(page: Page) {
         binding.loading.isVisible = page.bitmap == null
         binding.image.setImageBitmap(page.bitmap)
+        if (page.bitmap == null) {
+            onRenderRequested(page.number)
+        }
     }
 }
