@@ -7,6 +7,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import javax.inject.Inject
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import nick.template.R
 import nick.template.data.Event
@@ -26,11 +27,12 @@ class MainFragment @Inject constructor(
         binding.pager.offscreenPageLimit = 1 // Pre-load adjacent page
 
         adapter.renderRequests()
-            .onEach { page -> viewModel.processEvent(Event.GetPage(page)) }
+            .map(Event::GetPage)
+            .onEach(viewModel::processEvent)
             .launchIn(viewLifecycleOwner.lifecycleScope)
 
         viewModel.pages
-            .onEach { pages -> adapter.submitList(pages) }
+            .onEach(adapter::submitList)
             .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 }
