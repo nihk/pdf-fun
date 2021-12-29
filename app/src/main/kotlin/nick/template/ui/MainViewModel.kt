@@ -55,6 +55,8 @@ class MainViewModel(
                 Result.UpdatedPagesResult(pages)
             },
             // Use map instead of mapLatest to avoid clobbering requests during fast page swiping.
+            // PdfRenderer restricts only 1 page opened at a time, multiple page requests have to
+            // be done serially.
             filterIsInstance<Event.GetPage>().map { event ->
                 val currentPage = pages.value[event.page]
 
