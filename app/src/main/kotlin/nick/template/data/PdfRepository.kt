@@ -1,50 +1,40 @@
 package nick.template.data
 
-import android.content.res.AssetManager
+import android.content.ContentResolver
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
-import android.os.ParcelFileDescriptor
+import android.net.Uri
 import androidx.core.graphics.applyCanvas
 import androidx.core.graphics.createBitmap
-import java.io.File
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import nick.template.di.CacheDir
 import nick.template.di.IoContext
 
 interface PdfRepository {
     // Returns the page count of the file
-    suspend fun initialize(filename: String): Int
+    suspend fun openFile(uri: Uri): Int
     suspend fun page(page: Int): Bitmap
     suspend fun close()
 }
 
-class AssetPdfRepository @Inject constructor(
-    private val assetManager: AssetManager,
-    @CacheDir private val cacheDir: File,
-    @IoContext private val ioContext: CoroutineContext
+class FileSystemPdfRepository @Inject constructor(
+    @IoContext private val ioContext: CoroutineContext,
+    private val contentResolver: ContentResolver
 ) : PdfRepository {
     private var pdfRenderer: PdfRenderer? = null
     private val mutex = Mutex()
 
-    override suspend fun initialize(filename: String): Int = withContext(ioContext) {
-        // Contents of assets are compressed by default, and the PdfRenderer class cannot open it.
-        // Work around this by copying the file into the cache directory.
-        val file = File(cacheDir, filename)
-        if (!file.exists()) {
-            assetManager.open(filename).use { input ->
-                file.outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
-        }
+    override suspend fun openFile(uri: Uri): Int = withContext(ioContext) {
+        close()
+        val parcelFileDescriptor = contentResolver.openFileDescriptor(uri, "r")
+            ?: error("Uri not found: $uri")
 
-        PdfRenderer(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY))
+        PdfRenderer(parcelFileDescriptor)
             .also { pdfRenderer = it }
             .pageCount
     }

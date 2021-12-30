@@ -7,7 +7,7 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ActivityComponent
 import dagger.multibindings.IntoMap
-import nick.template.data.AssetPdfRepository
+import nick.template.data.FileSystemPdfRepository
 import nick.template.data.PdfRepository
 import nick.template.ui.AppFragmentFactory
 import nick.template.ui.MainFragment
@@ -28,5 +28,5 @@ interface MainModule {
     fun fragmentFactory(appFragmentFactory: AppFragmentFactory): FragmentFactory
 
     @Binds
-    fun pdfRepository(impl: AssetPdfRepository): PdfRepository
+    fun pdfRepository(impl: FileSystemPdfRepository): PdfRepository
 }
