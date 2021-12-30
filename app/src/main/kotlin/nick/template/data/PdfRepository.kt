@@ -1,7 +1,6 @@
 package nick.template.data
 
 import android.content.ContentResolver
-import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
@@ -14,6 +13,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import nick.template.di.IoContext
+import nick.template.ui.ScreenDimensions
 
 interface PdfRepository {
     // Returns the page count of the file
@@ -24,7 +24,8 @@ interface PdfRepository {
 
 class FileSystemPdfRepository @Inject constructor(
     @IoContext private val ioContext: CoroutineContext,
-    private val contentResolver: ContentResolver
+    private val contentResolver: ContentResolver,
+    private val screenDimensions: ScreenDimensions
 ) : PdfRepository {
     private var pdfRenderer: PdfRenderer? = null
     private val mutex = Mutex()
@@ -51,7 +52,7 @@ class FileSystemPdfRepository @Inject constructor(
             return withContext(ioContext) {
                 requireNotNull(pdfRenderer) { "Didn't initialize this repository" }
                     .openPage(page)
-                    .render(Resources.getSystem().displayMetrics.widthPixels)
+                    .render(screenDimensions.width)
             }
         }
     }
