@@ -34,7 +34,7 @@ object PageDiffCallback : DiffUtil.ItemCallback<Page>() {
     }
 
     override fun areContentsTheSame(oldItem: Page, newItem: Page): Boolean {
-        return oldItem == newItem
+        return oldItem.bitmap?.sameAs(newItem.bitmap) == true
     }
 }
 
