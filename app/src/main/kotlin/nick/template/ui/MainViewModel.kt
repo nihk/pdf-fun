@@ -78,15 +78,17 @@ class MainViewModel(
 
     private fun Flow<Result>.toEffects(): Flow<Effect> {
         return merge(
-            filterIsInstance<Result.ShowFileSystemResult>().mapLatest {
-                Effect.ShowFileSystemEffect(mimeTypes = listOf("application/pdf"))
+            filterIsInstance<Result.ShowFileSystemResult>().mapLatest { result ->
+                Effect.ShowFileSystemEffect(mimeTypes = result.mimeTypes)
             }
         )
     }
 
     private fun Flow<Event>.toResults(): Flow<Result> {
         return merge(
-            filterIsInstance<Event.ShowFileSystem>().map { Result.ShowFileSystemResult },
+            filterIsInstance<Event.ShowFileSystem>().map {
+                Result.ShowFileSystemResult(mimeTypes = listOf("application/pdf"))
+            },
             filterIsInstance<Event.OpenFile>().map { event ->
                 val pageCount = pdfRepository.openFile(event.uri)
                 val pages = List(pageCount, ::Page)
