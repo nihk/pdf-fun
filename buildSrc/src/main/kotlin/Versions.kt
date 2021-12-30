@@ -37,6 +37,7 @@ object Versions {
     const val photoView = "2.3.0"
     const val savedState = "1.1.0"
     const val security = "1.1.0-alpha03"
+    const val subsamplingScaleImageView = "3.10.0"
     const val swipeRefreshLayout = "1.1.0"
     const val recyclerView = "1.2.1"
     const val retrofit = "2.9.0"

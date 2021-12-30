@@ -6,6 +6,7 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.davemorrissey.labs.subscaleview.ImageSource
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import nick.template.data.Page
@@ -44,7 +45,10 @@ class PageViewHolder(
 ) : RecyclerView.ViewHolder(binding.root) {
     fun bind(page: Page) {
         binding.loading.isVisible = page.bitmap == null
-        binding.image.setImageBitmap(page.bitmap)
+        binding.image.maxScale = 10f
+        if (page.bitmap != null) {
+            binding.image.setImage(ImageSource.cachedBitmap(page.bitmap))
+        }
         if (page.bitmap == null && !page.isLoading) {
             onRenderRequested(page.number)
         }

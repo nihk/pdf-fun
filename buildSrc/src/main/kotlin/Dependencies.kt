@@ -20,6 +20,7 @@ object Dependencies {
     const val robolectric = "org.robolectric:robolectric:${Versions.robolectric}"
     const val savedState = "androidx.savedstate:savedstate-ktx:${Versions.savedState}"
     const val security = "androidx.security:security-crypto:${Versions.security}"
+    const val subsamplingScaleImageView = "com.davemorrissey.labs:subsampling-scale-image-view:${Versions.subsamplingScaleImageView}"
     const val swipeRefreshLayout = "androidx.swiperefreshlayout:swiperefreshlayout:${Versions.swipeRefreshLayout}"
     const val timber = "com.jakewharton.timber:timber:${Versions.timber}"
     const val transition = "androidx.transition:transition-ktx:${Versions.transition}"

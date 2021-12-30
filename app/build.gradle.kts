@@ -42,6 +42,7 @@ dependencies {
     implementation(Dependencies.Work.runtime)
     implementation(Dependencies.Lifecycle.runtime)
     implementation(Dependencies.viewPager2)
+    implementation(Dependencies.subsamplingScaleImageView)
 
 //    debugImplementation(Dependencies.leakCanary)
     debugImplementation(Dependencies.Fragment.testing)
