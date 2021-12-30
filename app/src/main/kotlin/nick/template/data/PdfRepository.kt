@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
-import androidx.core.graphics.applyCanvas
 import androidx.core.graphics.createBitmap
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
@@ -68,9 +67,9 @@ class FileSystemPdfRepository @Inject constructor(
             width = bitmapWidth,
             // Scale the height based on the max width
             height = (bitmapWidth.toFloat() / width * height).toInt()
-        ).applyCanvas {
+        ).apply {
             // White background to support transparent PDF pages
-            drawColor(Color.WHITE)
+            eraseColor(Color.WHITE)
         }
     }
 }
