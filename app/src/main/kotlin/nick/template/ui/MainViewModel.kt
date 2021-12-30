@@ -41,7 +41,7 @@ class MainViewModel(
     val effects: Flow<Effect>
 
     init {
-        val results = events
+        events
             .onEach { event -> Log.d("asdf", "event: $event") }
             .onCompletion {
                 Log.d("asdf", "Closing time")
@@ -50,15 +50,16 @@ class MainViewModel(
             .share() // Share emissions to the individual streams in toResults()
             .toResults()
             .share() // Share emissions to streams below
+            .also { results ->
+                states = results.toStates()
+                    .stateIn(
+                        scope = viewModelScope,
+                        started = SharingStarted.Lazily,
+                        initialValue = State()
+                    )
 
-        states = results.toStates()
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.Lazily,
-                initialValue = State()
-            )
-
-        effects = results.toEffects()
+                effects = results.toEffects()
+            }
     }
 
     private fun <T> Flow<T>.share() = shareIn(viewModelScope, SharingStarted.Lazily)
