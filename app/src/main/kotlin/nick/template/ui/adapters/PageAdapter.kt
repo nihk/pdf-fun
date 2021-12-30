@@ -43,7 +43,7 @@ class PageViewHolder(
     private val onRenderRequested: (Int) -> Unit
 ) : RecyclerView.ViewHolder(binding.root) {
     fun bind(page: Page) {
-        binding.loading.isVisible = page.isLoading
+        binding.loading.isVisible = page.bitmap == null
         binding.image.setImageBitmap(page.bitmap)
         if (page.bitmap == null && !page.isLoading) {
             onRenderRequested(page.number)
