@@ -48,6 +48,7 @@ class MainFragment @Inject constructor(
             .onEach { effect ->
                 when(effect) {
                     is Effect.ShowFileSystemEffect -> openFile.launch(effect.mimeTypes.toTypedArray())
+                    is Effect.MoveToPageEffect -> binding.pager.setCurrentItem(effect.page, false)
                 }
             }
 

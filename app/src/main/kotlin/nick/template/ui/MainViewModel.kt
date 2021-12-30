@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -80,6 +81,9 @@ class MainViewModel(
         return merge(
             filterIsInstance<Result.ShowFileSystemResult>().mapLatest { result ->
                 Effect.ShowFileSystemEffect(mimeTypes = result.mimeTypes)
+            },
+            filterIsInstance<Result.MoveToPageResult>().mapLatest { result ->
+                Effect.MoveToPageEffect(page = result.page)
             }
         )
     }
@@ -89,10 +93,10 @@ class MainViewModel(
             filterIsInstance<Event.ShowFileSystem>().map {
                 Result.ShowFileSystemResult(mimeTypes = listOf("application/pdf"))
             },
-            filterIsInstance<Event.OpenFile>().map { event ->
+            filterIsInstance<Event.OpenFile>().flatMapConcat { event ->
                 val pageCount = pdfRepository.openFile(event.uri)
                 val pages = List(pageCount, ::Page)
-                Result.PagesResult(pages)
+                flowOf(Result.PagesResult(pages), Result.MoveToPageResult(page = 0))
             },
             // flatMapMerge to allow concurrent page requests. Ultimately PdfRenderer will render
             // pages serially, but this ViewModel doesn't know that, so it tries to do concurrently
